@@ -3,32 +3,60 @@
 
 ---
 
-## The Problem
+## The Use Case
 
-Financial institutions process millions of transactions every day. When a potentially fraudulent transaction occurs, the window to act is narrow - seconds to minutes. Traditional fraud detection relies on rules engines that flag transactions, but the investigation and response process is largely manual: an analyst reviews the alert, looks up transaction history, cross-references known fraud patterns, decides whether to freeze the card, contacts the customer, and opens a case. This process is slow, inconsistent, and does not scale.
+Financial institutions process hundreds of millions of transactions daily. When a transaction is flagged as potentially fraudulent, the window to act is narrow — often seconds to minutes before further damage occurs or funds become irrecoverable.
 
-The challenge is not just detection - it is the end-to-end response: from the moment an anomaly is spotted to the moment the customer is protected and the case is documented, with a full audit trail that satisfies regulatory requirements.
+Banks need to move from *detecting* fraud to *responding* to it — end-to-end, fast, and at scale. That means: retrieving transaction history, assessing risk, deciding on action (freeze, notify, escalate), communicating with the customer, and closing the case with a full audit trail — all within a timeframe that actually protects the customer.
+
+Today this is largely a manual, analyst-driven process:
+- A rules engine flags a transaction
+- An analyst reviews the alert, looks up history, cross-references patterns
+- The analyst decides whether to freeze the card and contacts the customer
+- A case is opened and documented manually
+
+This workflow exists across virtually every major financial institution and is the industry baseline.
+
+---
+
+## The Challenges
+
+The manual approach has well-documented limitations:
+
+- **Speed**: Manual investigation of a single alert takes 45 minutes to 3+ hours for a genuine case — far too slow when fraud windows are measured in minutes
+- **Scale**: Banks typically process 15,000–50,000 fraud/AML alerts per month; manual review costs $25–75 per case
+- **False positive overload**: 85–95% of alerts from rule-based systems are false positives, causing analyst fatigue and inconsistent decisions
+- **Rules engines don't adapt**: Static thresholds can be probed by fraudsters; updating rules takes weeks, by which time attack patterns have evolved
+- **Inconsistency**: Decisions vary by analyst, shift, and workload — creating compliance risk and uneven customer experience
+- **Audit and compliance burden**: Regulatory requirements (PCI-DSS, GDPR, BSA) demand a complete, traceable record of every decision — which is hard to guarantee in a manual process
+- **Not scalable**: 70% of financial crime compliance labor costs go to investigators; adding headcount is not a sustainable answer
 
 ---
 
 ## The Solution
 
-This use case demonstrates how **Amazon Bedrock AgentCore** can power a real-time, autonomous fraud investigation system that handles the full response lifecycle - while keeping a human in the loop for decisions that require it.
+For this use case we plan to design and use a multi agentic solution which automates most of the tasks which are currently done manually by fraud/transactions analysts.
 
-A multi-agent system is triggered by either an automated rule (e.g. a transaction exceeds a threshold or originates from a high-risk country) or a direct human report (e.g. a customer flags a suspicious charge via the bank app). From that point, the system:
+Solution' objective is to provide an autonomous fraud investigation system that handles the full response lifecycle, while keeping a human in the loop where required.
 
-1. Autonomously retrieves and analyses the customer transaction history
-2. Cross-references known fraud patterns to compute a risk score
-3. Takes action based on the risk level - automatically for high-risk cases, or pausing for human approval on medium-risk cases
-4. Freezes the card, notifies the customer, and records the full case with an audit trail
+Another key requirement is to help Financial Institution comply with regulatory requirements, hence all key actions, either automated or manual, are automatically tracked for later review (third party audits, internal reviews, troubleshooting/improvement).
 
-The key differentiator is the **human-in-the-loop** pattern for medium-risk cases: the agent pauses execution, notifies a fraud analyst with a case summary and a link to the review dashboard, and waits - without blocking any resources - until the analyst approves or rejects the action. This is made possible by AgentCore async extended runtime capability.
+At high level, the following is the envisioned workflow:
+
+- **A.** Solution is triggered by either an automated rule (e.g. a transaction exceeds a threshold or originates from a high-risk country) or a direct human action (e.g. a customer flags a suspicious charge via the bank app).
+- **B–C.** Solution autonomously retrieves and analyses the customer transaction history, cross-references known fraud patterns, and computes a risk score.
+- **D.** Solution takes action based on the risk level — automatically for high-risk or low-risk cases, or requesting human approval on medium-risk cases.
+- **D-HIGH → F–H.** If high risk, solution freezes the card, notifies the customer, and records the full case with an audit trail.
+- **D-LOW → I.** If low risk, the event is logged and no further action is taken.
+- **D-MED → E.** If medium risk, human review is required to properly classify the transaction. 
+
+Solution is designed with **human-in-the-loop** pattern for medium-risk cases: the system pauses, notifies a fraud analyst with a case summary, and waits until the analyst review and classify the transaction. Then agentic system resume and follows high-risk path or low-risk path based on fraud analyst decision.
 
 ---
 
 ## Why AgentCore
 
-AgentCore provides the production-grade infrastructure layer that makes this solution possible at scale. Without it, a team would need to build and maintain: secure agent deployment and scaling, session isolation between concurrent investigations, persistent memory across interactions, authenticated access to downstream APIs, policy enforcement for automated vs human-gated actions, and a full observability stack for audit. AgentCore handles all of this out of the box.
+AgentCore provides the production-grade infrastructure layer that makes this solution possible at scale. Without it, a team would need to build and maintain: secure agent deployment and scaling, session isolation between concurrent investigations, persistent memory across interactions, authenticated access to downstream APIs, policy enforcement for automated vs human-gated actions, and a full observability stack for audit and operations. AgentCore handles all of this out of the box.
 
 ### AgentCore Capabilities Required
 
@@ -51,9 +79,9 @@ The flow is:
 - If the risk is MEDIUM, the agent pauses execution and triggers a notification to the fraud analyst (email via SES with a case summary and dashboard link)
 - The fraud analyst reviews the case on an internal dashboard and approves or rejects the freeze
 - The agent resumes from the exact point it paused, with the analyst decision recorded in the audit trail
-- If the risk is HIGH, the agent proceeds autonomously - no human approval required
+- If the risk is HIGH or LOW, the AI agent proceeds autonomously, with no further human involvement required.
 
-This pattern demonstrates one of AgentCore most powerful capabilities: the ability to pause a long-running agent workflow, hand off to a human, and resume - all without polling, timeouts, or infrastructure complexity.
+This pattern demonstrates AgentCore capability to pause a long-running agent workflow, hand off to a human, and resume when human feedback is received, all without polling, timeouts, or additional infrastructure complexity.
 
 ---
 
@@ -69,7 +97,7 @@ This solution uses 5 specialised agents. The Orchestrator delegates to peer/sub-
 | Notification Agent | Sub-agent | Handles all outbound communications - customer email, customer push notification, fraud analyst email with dashboard link |
 | Case Management Agent | Sub-agent | Writes the full investigation record with audit trail; optionally integrates with external case management systems |
 
-The **Fraud Analysis Agent** is designed as a peer agent because in production it could be independently deployed and reused across other use cases (loan underwriting, account opening). This makes the multi-agent story more compelling for customers.
+The **Fraud Analysis Agent** is designed as a peer agent because in production it could be independently deployed and reused across other use cases (loan underwriting, account opening). This makes this solution more decoupled and open to extension to other use cases.
 
 ---
 
