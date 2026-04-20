@@ -23,13 +23,13 @@ This workflow exists across virtually every major financial institution and is t
 
 The manual approach has well-documented limitations:
 
-- **Speed**: Manual investigation of a single alert takes 45 minutes to 3+ hours for a genuine case — far too slow when fraud windows are measured in minutes
-- **Scale**: Banks typically process 15,000–50,000 fraud/AML alerts per month; manual review costs $25–75 per case
-- **False positive overload**: 85–95% of alerts from rule-based systems are false positives, causing analyst fatigue and inconsistent decisions
-- **Rules engines don't adapt**: Static thresholds can be probed by fraudsters; updating rules takes weeks, by which time attack patterns have evolved
+- **Speed**: Manual investigation of a single alert takes 45 minutes to 3+ hours for a genuine case — far too slow when fraud windows are measured in minutes ([source](https://www.roe-ai.com/blog/the-cognitive-cost-of-manual-aml-investigations))
+- **Scale**: Banks typically process 15,000–50,000 fraud/AML alerts per month; manual review costs $25–75 per case ([source](https://www.finantrix.com/glossary/design-a-manual-review-queue-for-aml-alerts))
+- **False positive overload**: 85–95% of alerts from rule-based systems are false positives, causing analyst fatigue and inconsistent decisions ([source](https://www.facctum.com/blog/aml-false-positive-report))
+- **Rules engines don't adapt**: Static thresholds can be probed by fraudsters; updating rules takes weeks, by which time attack patterns have evolved ([source](https://thecondia.com/ai-fraud-detection-banks/))
 - **Inconsistency**: Decisions vary by analyst, shift, and workload — creating compliance risk and uneven customer experience
 - **Audit and compliance burden**: Regulatory requirements (PCI-DSS, GDPR, BSA) demand a complete, traceable record of every decision — which is hard to guarantee in a manual process
-- **Not scalable**: 70% of financial crime compliance labor costs go to investigators; adding headcount is not a sustainable answer
+- **Not scalable**: 70% of financial crime compliance labor costs go to investigators; adding headcount is not a sustainable answer ([source](https://www.niceactimize.com/blog/aml-improving-financial-investigations-essential-strategies-for-success/))
 
 ---
 
@@ -151,7 +151,7 @@ flowchart TD
 > Arrow numbers show the order of calls.
 
 ```mermaid
-flowchart LR
+flowchart TD
     A["A. Trigger\nEventBridge / API Gateway"]
     B["B. Orchestrator Agent"]
     C["C. Fraud Analysis Agent\npeer"]
